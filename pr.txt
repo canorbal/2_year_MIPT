@@ -1,0 +1,3 @@
+10 ls -l
+8 ps -ax
+1 sleep 3
