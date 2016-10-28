@@ -74,7 +74,7 @@ int copy(char* input_file, char* output_file)
       ret = -1;
       goto out;
     }
-2
+
 		int flag = -1;
     buf[bytes] = 0;
 		flag = write(output, buf,	bytes);
