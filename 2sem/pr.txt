@@ -1,4 +1,4 @@
 10 sleep 5
-4 ls -l
+4 asdf
 6 echo Hello world asdf
 1 sleep 10

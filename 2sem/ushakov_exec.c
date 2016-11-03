@@ -30,12 +30,12 @@ void usage()
 	"EXECUTOR begin programs according to your plan of execution.\n\n"
 	"############################################################\n"
 	"Description.\n"
-	"\tuseless FILE\n"
+	"\texecuter [FILE\n"
 	"FILE is a text file which contains info about programs to execute: \n\n"
 	"#############################################################\n"
 	"FORMAT:\n"
-	"\t SHIFT PROG_NAME ARG(1) ... ARG(N)\n"
-	"SHIFT should be in seconds.\n\n"
+	"\t [SHIFT [PROG_NAME [ARG(1) ... [ARG(N)\n"
+	"[SHIFT should be in seconds.\n\n"
 	);
 }
 
@@ -86,7 +86,6 @@ int sort_programs(const char* path)
 void free_memory(struct program* programs)
 {
 	if (programs == NULL){
-		fprintf(stderr, "Try to free null_ptr\n");
 		return;
 	}
 	int i;
@@ -115,7 +114,7 @@ struct program* allocate_memory()
 	struct program* programs = calloc(MAX_NUMBER_PROG, sizeof(struct program));
 	if (programs == NULL){
 		fprintf(stderr, "Can't allocate memory for array of programs\nReason: %s", strerror(errno));
-		goto allocate_out;
+		return NULL;
 	}
 
 	int i;
@@ -152,12 +151,12 @@ struct program* read_programs()
 	FILE* file = fopen("tmp_sorted_programs.txt", "r");
 	if (file == NULL) {
         fprintf(stderr, "Can't open file \"tmp_sorted_programs.txt\"\n");
-		goto read_programs_out;
+		return NULL;
 	}
 
 	struct program* programs = allocate_memory();
 	if (programs == NULL){
-		goto read_programs_out;
+		return NULL;
 	}
 
 	// read tmp_sorted_programs.txt
@@ -175,7 +174,7 @@ struct program* read_programs()
 		buff = strtok(string, sep);
 
 		if (buff == NULL) {
-        	fprintf(stderr, "Something wrong with time in line: %s\n", rec_string);
+        	fprintf(stderr, "Something went wrong with time in line: %s\n", rec_string);
 			usage();
         	goto read_programs_out;
     	}
@@ -278,23 +277,13 @@ int main(int argc, char** argv)
 	int sort_stat =  sort_programs(argv[1]);
 	if (sort_stat == -1) {
 		printf("Error in sorting.\n");
-		goto error_exit;
+		exit(EXIT_FAILURE);
 	}
 
 
 	struct program* programs = read_programs();
 	if (programs == NULL){
 		goto error_exit;
-	}
-
-	int i = 0;
-	int j = 0;
-	for(i=0; i<3; i++){
-		printf("%d ", programs[i].time);
-		for(j=0; j<programs[i].count_of_args; j++){
-			printf("_____%s_____ ", programs[i].args[j]);
-		}
-		printf("\n\n");
 	}
 
 	int run = run_programs(programs);
@@ -307,5 +296,5 @@ int main(int argc, char** argv)
 
 	error_exit:
 		free_memory(programs);
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 }
