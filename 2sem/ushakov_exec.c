@@ -58,7 +58,7 @@ int sort_programs(const char* path)
 		case 0:
 			exec_stat = execlp("sort", "sort", "-n", path, "-o", "tmp_sorted_programs.txt", NULL);
 			if (exec_stat == -1) {
-				printf("Something went wrong with execlp()\nReason: %s\n", strerror(errno));
+				fprintf(stderr, "Something went wrong with execlp()\nReason: %s\n", strerror(errno));
 				return -1;
 			}
 			break;
@@ -66,7 +66,7 @@ int sort_programs(const char* path)
 		default:
 			wait_stat = waitpid(sort_pid, &sort_stat, 0);
 			if (wait_stat == -1) {
-				printf("Something went wrong with waitpid()\nReason: %s\n", strerror(errno));
+				fprintf(stderr, "Something went wrong with waitpid()\nReason: %s\n", strerror(errno));
 				return -1;
 			}
 			break;
@@ -89,14 +89,14 @@ void free_memory(struct program* programs)
 		return;
 	}
 	int i;
-	for(i=0; i<MAX_NUMBER_PROG; i++){
+	for(i=0; i<MAX_NUMBER_PROG; ++i){
 		if (programs[i].prog_name != NULL){
 			free(programs[i].prog_name);
 			programs[i].prog_name = NULL;
 		}
 
 		int j;
-		for(j=0; j<MAX_ARG_NUMB; j++){
+		for(j=0; j<MAX_ARG_NUMB; ++j){
 			if (programs[i].args[j] != NULL){
 				free(programs[i].args[j]);
 				programs[i].args[j] = NULL;
@@ -118,7 +118,7 @@ struct program* allocate_memory()
 	}
 
 	int i;
-	for(i = 0; i< MAX_NUMBER_PROG; i++){
+	for(i = 0; i< MAX_NUMBER_PROG; ++i){
 		programs[i].prog_name = calloc(MAX_PROG_NAME_SIZE, sizeof(char));
 		if (programs[i].prog_name == NULL){
 			fprintf(stderr, "Can't allocate memory for prog_name array\nReason: %s", strerror(errno));
@@ -130,7 +130,7 @@ struct program* allocate_memory()
 			goto allocate_out;
 		}
 		int j;
-		for(j=0; j<MAX_ARG_NUMB; j++){
+		for(j=0; j<MAX_ARG_NUMB; ++j){
 			programs[i].args[j] = calloc(MAX_ARG_SIZE, sizeof(char));
 			if (programs[i].args[j] == NULL){
 				fprintf(stderr, "Can't allocate memory for args[%d] array\nReason: %s", j, strerror(errno));
@@ -191,13 +191,13 @@ struct program* read_programs()
 		int j=0;
 		while (buff != NULL) {
 			strcpy(programs[i].args[j], buff);
-			j++;
+			++j;
 			buff = strtok(NULL, sep);
 		}
 		programs[i].args[j] = NULL;
 		programs[i].count_of_args = j;
 
-		i++;
+		++i;
 	}
 
 	fclose(file);
@@ -219,7 +219,7 @@ int run_programs(struct program* programs)
 	int numb_of_proc = 0;
 
 
-	for(i=0; i<MAX_NUMBER_PROG; i++){
+	for(i=0; i<MAX_NUMBER_PROG; ++i){
 
 		if(programs[i].args[0] != NULL)
 			time_shift = programs[i].time - prev_time;
@@ -245,7 +245,7 @@ int run_programs(struct program* programs)
 
 		        default:
 					programs[i].pid = fork_ret;
-					numb_of_proc++;
+					++numb_of_proc;
 		    }
 		}
 	}
@@ -254,7 +254,7 @@ int run_programs(struct program* programs)
 		int status_ret;
 		int waitpid_ret = waitpid(-1, &status_ret, 0);
 
-		for(j=0; j<i; j++){
+		for(j=0; j<i; ++j){
 			if (waitpid_ret == programs[j].pid){
 			printf("process %s ended with code %d\n",programs[j].args[0], status_ret);
 			programs[j].pid = -1;
