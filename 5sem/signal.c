@@ -1,55 +1,65 @@
 #include <signal.h>
-#include <string.h>
 #include <stdio.h>
-
-void handler(int signal)
-{
-  print("received signal %d", signal)
-  int i = counter;
-  counter = i;
-}
-
-void add(int signal)
-{
-  print("received signal %d", signal)
-  int i = counter;
-  i--;
-  counter = i;
-}
-
-void print_cnt(int signal)
-{
-  fprintf( "counter=%d\n",counter);
-}
+#include <string.h>
 
 int counter = 0;
 
+void add(int signum)
+{
+    printf("enter add\n");
+    int eax = counter;
+    sleep(5);
+    eax++;
+    counter = eax;
+    printf("leave add\n");
+}
+
+void sub(int signum)
+{
+    printf("enter sub\n");
+    int eax = counter;
+    eax--;
+    counter = eax;
+    printf("leave sub\n");
+}
+
+void print_cnt(int signum)
+{
+    printf("counter=%d\n", counter);
+}
+
 int main()
 {
+    sigset_t mask, old_mask;
 
-  FILE* f = fopen("process.pid","wt");
+    sigfillset(&mask);
 
-  //printf("my pid = %d\n",getpid());
-  fclose(f);
+    sigprocmask( SIG_BLOCK, &mask, &old_mask);
 
-  struct sigaction sa, sa_old;
-  memset(&sa, 0, sizeof(sa)); <-- заполняет одним и тем же байтом все адресное пространствоа
-  sa.sa_handler = add;
-  sigfillset(&sa.sa_mask);
-  sigaction(SIGUSR1, &sa, 0);  // еще вариант sigaction(SIGUSR1, &sa, &sa_old); в sa_old записывается
-                                              //                     обработчик, который стоят до этого
-
-  sa.sa_handler  = sub;
-  sigaction()
+    FILE *f = fopen("process.pid", "wt");
+    fprintf(f, "%d", getpid());
+    fclose(f);
 
 
-  signal(SIGUSR1, add);  // при получении сигнала SIGUSR1 будет вызвана функция handler
-  signal(SIGUSR2, sub);
-  signal(SIGHUP,  print_cnt)
+    struct sigaction sa, sa_old;
+    memset(&sa, 0, sizeof(sa));
 
-  while (1)  //// <--  ПРАВИЛЬНЫЙ sleep()
-    sleep(100);
-  // функция sleep ненадежная, потому что может прекратиться при получении сигнала
-  // аналогично функция read (может получить какой-нибудь сигнал)
-  return 0;
+    sigfillset(&sa.sa_mask);
+
+    sa.sa_handler = add;
+    sigaction(SIGUSR1, &sa, &sa_old);
+
+    sa.sa_handler = sub;
+    sigaction(SIGUSR2, &sa, 0);
+
+    signal(SIGHUP, print_cnt);
+
+    while(1) {
+        printf( "suspending...\n");
+        sigsuspend( &old_mask);
+        printf( "received signal, slipping 5 sec\n");
+        sleep(5);
+    }
+
 }
+
