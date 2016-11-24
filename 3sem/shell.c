@@ -8,7 +8,7 @@
 
 #define MAX_STRING_SIZE 256
 #define MAX_PROG_NAME_SIZE 16
-#define MAX_ARGS_SIZE 8
+#define MAX_ARGS_SIZE 64
 #define MAX_ARGS_NUM 16
 
 struct program
@@ -17,41 +17,59 @@ struct program
 	char** args;
 };
 
-
-void launch_prog(char* first, char* second)
+int spawn_proc (int in, int out, struct program *cmd)
 {
-	int fd[2], result;
-	ssize_t size;
+	pid_t pid;
 
-	if (pipe(fd) < 0) {
-     	printf("Can't open pipen");
-     	exit(-1);
-   	}
-	
-	result = fork();
+	if ((pid = fork ()) == 0)
+	{
+		if (in != 0)
+		{
+			dup2 (in, 0);
+			close (in);
+		}
 
-	if(result < 0) {
-      		printf("Can't fork childn");
-      		exit(-1);
+		if (out != 1)
+		{
+			dup2 (out, 1);
+			close (out);
+		}
+
+		return execvp (cmd->name, cmd->args);
 	}
-
-	if (result > 0) {
-	/* Parent process */
-	}
-
-      	close(fd[0]);
-
-      	size = write(fd[1], "Hello, world!", 14);
-
-      	if(size != 14){
-        	printf("Can't write all string to pipen");
-        	exit(-1);
-      	}
-
-     	close(fd[1]);
-      	printf("Parent exitn");
-	
+	return pid;
 }
+
+
+int launch_prog(struct program* first, struct program* second)
+{
+	int in, fd[2];
+
+	in = 0; // first process take input from stdin
+
+	pipe(fd);
+	// f[1] is the write end of the pipe 
+	spawn_proc(in, fd[1], first);
+	// no need for write end of the pipe, clild has written there
+	close(fd[1]);
+	
+	// next programm will read from  here - fd[0]
+	
+	//dup2(fd[0], 0);
+	int fd_2[2];
+	pipe(fd_2);
+		
+	
+				
+	//return execvp(second->name, second->args);
+	spawn_proc(fd[0], fd_2[1], second);
+		
+	char s[1024];	
+	int size = read(fd_2[0], s, 1024);
+	printf("%s\n", s);
+	printf("readed bytes %d\n", size);  	
+}
+
 
 struct program* free_memory(struct program* prog)
 {
@@ -100,7 +118,7 @@ struct program* allocate_memory()
 	}
 
 	prog->args = NULL;
-	prog->args = malloc(sizeof(char*));
+	prog->args = malloc(MAX_ARGS_NUM*sizeof(char*));
 	if (prog->args == NULL){
 		fprintf(stderr, "Can't allocate memory for prog_args\n");
 		goto allocate_out;
@@ -108,9 +126,11 @@ struct program* allocate_memory()
 
 	int i;
 	for(i=0; i<MAX_ARGS_NUM; ++i){
+
 		prog->args[i] = NULL;
 		prog->args[i] = malloc(MAX_ARGS_SIZE*sizeof(char));
 		if (prog->args[i] == NULL){
+
 			fprintf(stderr, "Can't allocate memory for args[%d]\n", i);
 			goto allocate_out;
 			}
@@ -122,6 +142,35 @@ struct program* allocate_memory()
 		free_memory(prog);
 		return NULL;
 }	
+
+struct program* parse(char* prog_line)
+{
+	char* sep = " \n\0\t";
+	struct program* prog = allocate_memory();
+	if (prog == NULL){
+		return NULL;
+	}
+		
+	char* buff = NULL;
+	
+	buff = strtok(prog_line, sep);
+	
+	prog->name = buff;
+	
+	//printf("prog_name = %s\n", prog->name);
+
+	int j=0;
+	while (buff != NULL) {
+		strcpy(prog->args[j], buff);
+		//printf("prog->args[%d] = %s\n", j, prog->args[j]);
+		++j;
+		buff = strtok(NULL, sep);
+		//printf("buff = %s\n", buff);
+	}
+	prog->args[j] = NULL;
+	
+	return prog;	
+}
 
 
 int start_session()
@@ -148,36 +197,31 @@ int start_session()
 		return -1;
 	}
 		
-	struct program* first;	
-	first = allocate_memory();
+	char* sep = "\n|";
+	
+	char* first = strtok(line, sep);
+	char* second = strtok(NULL, sep);
+	
+	printf("now first = %s\n", first);
+	printf("now second = %s\n", second);
+	
+	struct program* first_prog = NULL;
+
 	if (first == NULL){
 		return -1;
 	}
-	
-	char* sep = "\n |";
-	
-	printf("%s\n", line);
-	first->name = strtok(line, sep);
-	if (first->name == NULL){
-		fprintf(stderr, "Can't parse line %s", line);
-		return -1;
+	first_prog = parse(first);
+
+
+	//printf("first_prog --%s--%s--%s--%s--\n", first_prog->args[0], first_prog->args[1], first_prog->args[2], first_prog->args[3]);
+	struct program* second_prog = NULL;
+	if (second != NULL){
+		second_prog = parse(second);
 	}
 
-	printf("first->name = %s\n", first->name);
+	//printf("second_prog --%s--%s--%s--%s--\n", second_prog->args[0], second_prog->args[1], second_prog->args[2], second_prog->args[3]);
 	
-	char* buff;
-
-	buff = strtok(NULL, sep);
-
-	int j=0;
-	while (buff != NULL) {
-		strcpy(first->args[j], buff);
-		++j;
-		buff = strtok(NULL, sep);
-	}
-	first->args[j] = NULL;
-	
-	
+	launch_prog(first_prog, second_prog);
 }
 
 
