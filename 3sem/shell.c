@@ -10,6 +10,7 @@
 #define MAX_PROG_NAME_SIZE 16
 #define MAX_ARGS_SIZE 64
 #define MAX_ARGS_NUM 16
+#define MAX_PROG_NUM 20
 
 struct program
 {
@@ -65,52 +66,41 @@ int spawn_proc (int in, int out, struct program *cmd)
 
 
 
-int launch_prog(struct program* first, struct program* second)
+int launch_prog(struct program** array_of_prog, int count)
 {
-	if (second != NULL){
 		int in, fd[2];
 
 		in = 0; // first process take input from stdin
 		int ret = 0;
-		ret = pipe(fd);
-		if (ret == -1){
-			fprintf(stderr, "Can't make pipe\n");
-			fprintf(stderr, "%s\n", strerror(errno));
-			return -1;
-		}
+			
+		int i;
+		for (i=0; i<count; i++){
+			
+			ret = pipe(fd);
+			if (ret == -1){
+				fprintf(stderr, "Can't make pipe\n");
+				fprintf(stderr, "%s\n", strerror(errno));
+				return -1;
+			}
 
-		ret = spawn_proc(in, fd[1], first);
-		if (ret == -1){
-			goto out;
-		}
+			ret = spawn_proc(in, fd[1], array_of_prog[i]);
+			if (ret == -1){
+				goto out;
+			}
 
-		close(fd[1]);
-
-		int fd_2[2];
-		ret = pipe(fd_2);
-		if (ret == -1){
-			fprintf(stderr, "Can't make pipe\n");
-			fprintf(stderr, "%s\n", strerror(errno));
-			goto out;
-		}
-		
-		ret = spawn_proc(fd[0], fd_2[1], second);
-		if (ret == -1){
-			goto out;
-		}
-		
-		close(fd[0]);
-		close(fd_2[1]);
-		
+			close(fd[1]);
+			in = fd[0];
+		}	
+	
 		char s[1];
 		int tmp = 0;
 		int size = 0;
 
-		tmp = read(fd_2[0], s, sizeof(char));
+		tmp = read(fd[0], s, sizeof(char));
 		while (tmp  > 0){
 			size+=tmp;
 			printf("%c", s[0]);
-			tmp = read(fd_2[0], s, sizeof(char));
+			tmp = read(fd[0], s, sizeof(char));
 			if (tmp == -1){
 				fprintf(stderr,"Error in reading from pipe\n");
 				fprintf(stderr, "%s\n", strerror(errno));
@@ -118,59 +108,14 @@ int launch_prog(struct program* first, struct program* second)
 			}
 		}
 		
-		close(fd_2[0]);
+		close(fd[0]);
 		printf("readed %d bytes\n", size);
-
+	
+		return 0;
 		out:
 			close(fd[0]);
-			close(fd[1]);
-			close(fd_2[0]);
-			close(fd_2[1]);
+			close(fd[1]);	
 			return -1;
-	}
-
-	if (second == NULL){
-		int fd[2];
-		int ret = pipe(fd);
-		if (ret == -1){
-			fprintf(stderr, "Can't make pipe\n");
-			fprintf(stderr, "%s\n", strerror(errno));
-			return -1;
-		}
-
-		ret = spawn_proc(0, fd[1], first);
-		if (ret == -1){
-			close(fd[0]);
-			close(fd[1]);
-			return -1;
-		}
-
-		close(fd[1]);
-
-		char s[1];
-		int tmp = 0;
-		int size = 0;
-		
-		tmp = read(fd[0], s, sizeof(char));
-		while(tmp > 0){
-			size+=tmp;
-			printf("%c", s[0]);
-			tmp = read(fd[0], s, sizeof(char));
-			if (tmp == -1){
-				fprintf(stderr,"Can't read from pipe\n");
-				fprintf(stderr, "%s\n", strerror(errno));
-				close(fd[0]);
-				close(fd[1]);
-				return -1;
-			}
-		}
-					
-		close(fd[0]);
-
-		printf("\nreaded bytes %d\n", size);
-
-		return 0;
-	}
 
 }
 
@@ -255,7 +200,7 @@ struct program* parse(char* prog_line)
 		return NULL;
 	}
 
-	char* buff = NULL;
+	char* buff = NULL;	
 
 	buff = strtok(prog_line, sep);
 
@@ -298,38 +243,44 @@ int start_session()
 
 	printf("%s\n", line);
 
-	char* sep = "\n|";
+	char* sep = "|";
 
-	char* first = strtok(line, sep);
-	char* second = strtok(NULL, sep);
+	struct program* array[MAX_PROG_NUM];
+	char  str_array[MAX_PROG_NUM][MAX_ARGS_SIZE];
+	
+	int count = 0;
 
-	printf("now first = %s\n", first);
-	printf("now second = %s\n", second);
+	char* buf = strtok(line, sep);
+	
 
-	struct program* first_prog = NULL;
-
-	if (first == NULL){
-		return -1;
+	while (buf != NULL){
+		strcpy(str_array[count], buf);
+		count++;
+		buf = strtok(NULL, sep);
+	}
+	
+	int i;
+	for(i=0; i<count; i++){
+		array[i] = parse(str_array[i]);	
 	}
 
-	first_prog = parse(first);
-	if (first_prog == NULL){
-		return -1;
+/*
+	buf = strtok(NULL, sep);
+	printf("buf = %s\n", buf);
+
+*/
+	/*for(i=0; i<count; i++){
+		printf("cmd[%d] = %s\n", i, array[i]->name);
+	}
+	printf("count = %d\n", count);
+	*/
+
+	launch_prog(array, count);
+	for (i=0; i<count; i++){
+		free_memory(array[i]);
 	}
 
-	//printf("first_prog --%s--%s--%s--%s--\n", first_prog->args[0], first_prog->args[1], first_prog->args[2], first_prog->args[3]);
-	struct program* second_prog = NULL;
-	if (second != NULL){
-		second_prog = parse(second);
-		if (second_prog == NULL){
-			return -1;
-		}
-	}
-
-	//printf("second_prog --%s--%s--%s--%s--\n", second_prog->args[0], second_prog->args[1], second_prog->args[2], second_prog->args[3]);
-
-	launch_prog(first_prog, second_prog);
-}
+}	
 
 
 int main(int argc, char** argv)
