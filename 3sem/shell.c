@@ -43,31 +43,52 @@ int spawn_proc (int in, int out, struct program *cmd)
 
 int launch_prog(struct program* first, struct program* second)
 {
-	int in, fd[2];
+	if (second != NULL){
+		int in, fd[2];
 
-	in = 0; // first process take input from stdin
+		in = 0; // first process take input from stdin
 
-	pipe(fd);
-	// f[1] is the write end of the pipe 
-	spawn_proc(in, fd[1], first);
-	// no need for write end of the pipe, clild has written there
-	close(fd[1]);
+		pipe(fd);
+		spawn_proc(in, fd[1], first);
+		close(fd[1]);
+
+		int fd_2[2];
+		pipe(fd_2);
+						
+		spawn_proc(fd[0], fd_2[1], second);
 	
-	// next programm will read from  here - fd[0]
+		close(fd_2[1]);	
+		char s[300];	
+		int tmp = 0;
+		int size = 0;
 	
-	//dup2(fd[0], 0);
-	int fd_2[2];
-	pipe(fd_2);
+		while ((tmp = read(fd_2[0], s, 300)) > 0){
+		size+=tmp;
+		printf("%s", s);
+		}
+	
+		printf("readed bytes %d\n", size);
+	}
+
+	if (second == NULL){
+		int fd[2];
+		pipe(fd);
+		spawn_proc(0, fd[1], first);
+
+		close(fd[1]);
+
+		char s[300];	
+		int tmp = 0;
+		int size = 0;
+
+		while ((tmp = read(fd[0], s, 300)) > 0){
+			size+=tmp;
+			printf("%s", s);
+		}
 		
-	
-				
-	//return execvp(second->name, second->args);
-	spawn_proc(fd[0], fd_2[1], second);
-		
-	char s[1024];	
-	int size = read(fd_2[0], s, 1024);
-	printf("%s\n", s);
-	printf("readed bytes %d\n", size);  	
+		printf("readed bytes %d\n", size);
+	}
+
 }
 
 
@@ -227,7 +248,8 @@ int start_session()
 
 int main(int argc, char** argv)
 {	
-	start_session();
-		
+	while(1){
+		start_session();
+	}
 	return 0;
 }
