@@ -20,8 +20,16 @@ struct program
 int spawn_proc (int in, int out, struct program *cmd)
 {
 	pid_t pid;
+	int ret = 0;
 
-	if ((pid = fork ()) == 0)
+	pid = fork();
+	
+	if (pid == -1){
+		fprintf(stderr, "Can't fork\n");
+		fprintf(stderr, "%s\n", strerror(errno));
+		return -1;	 
+	}
+	if (pid  == 0)
 	{
 		if (in != 0)
 		{
@@ -35,10 +43,26 @@ int spawn_proc (int in, int out, struct program *cmd)
 			close (out);
 		}
 
-		return execvp (cmd->name, cmd->args);
+		int exec_stat = execvp (cmd->name, cmd->args);
+		if ( exec_stat == -1) {
+			fprintf(stderr, "Can't execute %s\n", cmd->name);
+			fprintf(stderr, "%s\n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
 	}
-	return pid;
+	int wait_stat;
+	int ret_stat;
+	
+	wait_stat = waitpid(pid, &ret_stat, WNOHANG);
+	if (wait_stat == -1){
+		fprintf(stderr, "Error in waitpid with process %s\n", cmd->name);
+		fprintf(stderr, "%s\n", strerror(errno));
+		return -1;
+	}
+
+	return 0;
 }
+
 
 
 int launch_prog(struct program* first, struct program* second)
@@ -47,46 +71,105 @@ int launch_prog(struct program* first, struct program* second)
 		int in, fd[2];
 
 		in = 0; // first process take input from stdin
+		int ret = 0;
+		ret = pipe(fd);
+		if (ret == -1){
+			fprintf(stderr, "Can't make pipe\n");
+			fprintf(stderr, "%s\n", strerror(errno));
+			return -1;
+		}
 
-		pipe(fd);
-		spawn_proc(in, fd[1], first);
+		ret = spawn_proc(in, fd[1], first);
+		if (ret == -1){
+			goto out;
+		}
+
 		close(fd[1]);
 
 		int fd_2[2];
-		pipe(fd_2);
-						
-		spawn_proc(fd[0], fd_2[1], second);
-	
-		close(fd_2[1]);	
-		char s[300];	
+		ret = pipe(fd_2);
+		if (ret == -1){
+			fprintf(stderr, "Can't make pipe\n");
+			fprintf(stderr, "%s\n", strerror(errno));
+			goto out;
+		}
+		
+		ret = spawn_proc(fd[0], fd_2[1], second);
+		if (ret == -1){
+			goto out;
+		}
+		
+		close(fd[0]);
+		close(fd_2[1]);
+		
+		char s[1];
 		int tmp = 0;
 		int size = 0;
-	
-		while ((tmp = read(fd_2[0], s, 300)) > 0){
-		size+=tmp;
-		printf("%s", s);
+
+		tmp = read(fd_2[0], s, sizeof(char));
+		while (tmp  > 0){
+			size+=tmp;
+			printf("%c", s[0]);
+			tmp = read(fd_2[0], s, sizeof(char));
+			if (tmp == -1){
+				fprintf(stderr,"Error in reading from pipe\n");
+				fprintf(stderr, "%s\n", strerror(errno));
+				goto out;
+			}
 		}
-	
-		printf("readed bytes %d\n", size);
+		
+		close(fd_2[0]);
+		printf("readed %d bytes\n", size);
+
+		out:
+			close(fd[0]);
+			close(fd[1]);
+			close(fd_2[0]);
+			close(fd_2[1]);
+			return -1;
 	}
 
 	if (second == NULL){
 		int fd[2];
-		pipe(fd);
-		spawn_proc(0, fd[1], first);
+		int ret = pipe(fd);
+		if (ret == -1){
+			fprintf(stderr, "Can't make pipe\n");
+			fprintf(stderr, "%s\n", strerror(errno));
+			return -1;
+		}
+
+		ret = spawn_proc(0, fd[1], first);
+		if (ret == -1){
+			close(fd[0]);
+			close(fd[1]);
+			return -1;
+		}
 
 		close(fd[1]);
 
-		char s[300];	
+		char s[1];
 		int tmp = 0;
 		int size = 0;
-
-		while ((tmp = read(fd[0], s, 300)) > 0){
-			size+=tmp;
-			printf("%s", s);
-		}
 		
-		printf("readed bytes %d\n", size);
+		tmp = read(fd[0], s, sizeof(char));
+		while(tmp > 0){
+			size+=tmp;
+			printf("%c", s[0]);
+			tmp = read(fd[0], s, sizeof(char));
+			if (tmp == -1){
+				fprintf(stderr,"Can't read from pipe\n");
+				fprintf(stderr, "%s\n", strerror(errno));
+				close(fd[0]);
+				close(fd[1]);
+				return -1;
+			}
+		}
+					
+		close(fd[0]);
+
+		printf("\nreaded bytes %d\n", size);
+
+		return 0;
 	}
 
 }
@@ -128,7 +211,7 @@ struct program* allocate_memory()
 	prog = malloc(sizeof(struct program));
 	if (prog == NULL){
 		fprintf(stderr,"Can't allocate memory for struct program\n");
-		goto allocate_out;	
+		goto allocate_out;
 	}
 
 	prog->name = NULL;
@@ -156,28 +239,28 @@ struct program* allocate_memory()
 			goto allocate_out;
 			}
 	}
-	
+
 	return prog;
-					
+
 	allocate_out:
 		free_memory(prog);
 		return NULL;
-}	
+}
 
 struct program* parse(char* prog_line)
 {
-	char* sep = " \n\0\t";
+	char* sep = " \n\t";
 	struct program* prog = allocate_memory();
 	if (prog == NULL){
 		return NULL;
 	}
-		
+
 	char* buff = NULL;
-	
+
 	buff = strtok(prog_line, sep);
-	
+
 	prog->name = buff;
-	
+
 	//printf("prog_name = %s\n", prog->name);
 
 	int j=0;
@@ -189,8 +272,8 @@ struct program* parse(char* prog_line)
 		//printf("buff = %s\n", buff);
 	}
 	prog->args[j] = NULL;
-	
-	return prog;	
+
+	return prog;
 }
 
 
@@ -198,56 +281,59 @@ int start_session()
 {
 	printf("***********SHELL*************\n");
 	printf("**write down shell commands**\n");
-	
+
 	char* line = NULL;
-	line = malloc(MAX_STRING_SIZE * sizeof(char));
 
-	
-	fflush(stdin); // clear stream
-	fgets(line, MAX_STRING_SIZE, stdin);
-	if(line == NULL){
-		fprintf(stderr, "Wrong input");
-		// usage();
-	}
 
-	printf("%s\n", line);	
-	
-		
+	size_t size = 0;
+	int len;
+	len = getline(&line, &size, stdin);
 
-	if (line == NULL){
+	if (len == -1){
+		fprintf(stderr, "Error in reading commands\n");
 		return -1;
 	}
-		
-	char* sep = "\n|";
 	
+	line[len] = '\0';
+
+	printf("%s\n", line);
+
+	char* sep = "\n|";
+
 	char* first = strtok(line, sep);
 	char* second = strtok(NULL, sep);
-	
+
 	printf("now first = %s\n", first);
 	printf("now second = %s\n", second);
-	
+
 	struct program* first_prog = NULL;
 
 	if (first == NULL){
 		return -1;
 	}
-	first_prog = parse(first);
 
+	first_prog = parse(first);
+	if (first_prog == NULL){
+		return -1;
+	}
 
 	//printf("first_prog --%s--%s--%s--%s--\n", first_prog->args[0], first_prog->args[1], first_prog->args[2], first_prog->args[3]);
 	struct program* second_prog = NULL;
 	if (second != NULL){
 		second_prog = parse(second);
+		if (second_prog == NULL){
+			return -1;
+		}
 	}
 
 	//printf("second_prog --%s--%s--%s--%s--\n", second_prog->args[0], second_prog->args[1], second_prog->args[2], second_prog->args[3]);
-	
+
 	launch_prog(first_prog, second_prog);
 }
 
 
 int main(int argc, char** argv)
-{	
+{
 	while(1){
 		start_session();
 	}
