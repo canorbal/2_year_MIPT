@@ -131,7 +131,6 @@ struct program* free_memory(struct program* prog)
 		prog->name = NULL;
 	}
 
-
 	if (prog->args != NULL){
 		int i;
 		for(i=0; i<MAX_ARGS_NUM; ++i){
@@ -154,6 +153,7 @@ struct program* allocate_memory()
 {
 	struct program* prog = NULL;
 	prog = malloc(sizeof(struct program));
+
 	if (prog == NULL){
 		fprintf(stderr,"Can't allocate memory for struct program\n");
 		goto allocate_out;
@@ -202,10 +202,8 @@ struct program* parse(char* prog_line)
 
 	char* buff = NULL;	
 
-	buff = strtok(prog_line, sep);
-
-	prog->name = buff;
-
+	buff = strtok(prog_line, sep);;
+	strcpy(prog->name, buff);
 	//printf("prog_name = %s\n", prog->name);
 
 	int j=0;
@@ -276,7 +274,7 @@ int start_session()
 	*/
 
 	launch_prog(array, count);
-	for (i=0; i<count; i++){
+	for(i=0; i<count; i++){
 		free_memory(array[i]);
 	}
 
