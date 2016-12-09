@@ -9,70 +9,85 @@
 #include <signal.h>
 #include <stdlib.h>
 
-int out_char = 0, counter = 128;
-pid_t pid;
 
-// Объявляем функции выполняемые по сигналам
+void usage()
+{
+    printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
+            "\tCOPY PROGRAM ON SIGNAL.\n"
+            "It allows you to copy files using signals\n"
+            "SYNOPSIS\n"
+            "\tsignalcp [FILE_FROM] [FILE_TO] \n\n"
+            "DESCRIPTION\n"
+            "\tFILE_FROM - is a file which should be copied to FILE_TO\n\n" 
+            "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
+             );
+}
+
+pid_t pid;
+int output_char = 0;
+int counter = 128;
 
 // SIGCHLD
-void childexit(int signo) {
-	exit(EXIT_SUCCESS);
+void childexit(int sign) 
+{
+    exit(EXIT_SUCCESS);
 }
 
 // SIGALRM
-void parentexit(int signo) { 
+void parentexit(int sign) 
+{ 
 	exit(EXIT_SUCCESS);
 }
 
 // Nothing
-void empty(int signo) {
+void nothing(int sign) {
 }
 
-// SIGUSR1
-void one(int signo) {
-	out_char += counter;
+
+// SIGUSR2
+void zero_handler(int sign) 
+{ 	
 	counter /= 2;	
 	kill(pid, SIGUSR1);
 }
 
-// SIGUSR2
-void zero(int signo) { 	
-	counter/=2;	
+
+// SIGUSR1
+void one_handler(int sign) 
+{
+	output_char += counter;
+	counter /= 2;	
 	kill(pid, SIGUSR1);
 }
 
-
-int main(int argc, char ** argv){
-	if (argc != 2) {
-		fprintf(stderr, "Use: %s [source]\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-	pid_t ppid = getpid(); // Запонимаем пид родителя, то есть приёмника
-
+int copy(char** argv)
+{
+	pid_t parent_pid = getpid(); // Запонимаем пид родителя
+    
 	sigset_t set;
 
 	// Изменяем набор блокированых сигналов
 
 	// при SIGCHLD - выходим
-	struct sigaction act_exit;
-	memset(&act_exit, 0, sizeof(act_exit));
-	act_exit.sa_handler = childexit; 
-	sigfillset(&act_exit.sa_mask); 
-	sigaction(SIGCHLD, &act_exit, NULL); 
+	struct sigaction child_exit_action;
+	memset(&child_exit_action, 0, sizeof(child_exit_action));
+	child_exit_action.sa_handler = childexit; 
+	sigfillset(&child_exit_action.sa_mask); 
+	sigaction(SIGCHLD, &child_exit_action, NULL); 
 
-	// SIGUSR1 - one()
-	struct sigaction act_one;
-	memset(&act_one, 0, sizeof(act_one));
-	act_one.sa_handler = one;
-	sigfillset(&act_one.sa_mask);
-	sigaction(SIGUSR1, &act_one, NULL);
+	// SIGUSR1 - one_handler()
+	struct sigaction one_signal;
+	memset(&one_signal, 0, sizeof(one_signal));
+	one_signal.sa_handler = one_handler;
+	sigfillset(&one_signal.sa_mask);
+	sigaction(SIGUSR1, &one_signal, NULL);
 
-	// SIGUSR2 - zero()
-	struct sigaction act_zero;
-	memset(&act_zero, 0, sizeof(act_zero));
-	act_zero.sa_handler = zero;
-	sigfillset(&act_zero.sa_mask);    
-	sigaction(SIGUSR2, &act_zero, NULL);
+	// SIGUSR2 - zero_handler()
+	struct sigaction zero_signal;
+	memset(&zero_signal, 0, sizeof(zero_signal));
+	zero_signal.sa_handler = zero_handler;
+	sigfillset(&zero_signal.sa_mask);    
+	sigaction(SIGUSR2, &zero_signal, NULL);
 								       
 
 	//sigemptyset(&set);
@@ -84,36 +99,35 @@ int main(int argc, char ** argv){
 	sigprocmask(SIG_BLOCK, &set, NULL );
 	sigemptyset(&set);
 
-	// Ветвимся
+    int fd = open(argv[1], O_RDONLY);
+    if (fd == -1){
+        fprintf(stderr, "Can't open file %s\n", argv[1]);
+        fprintf(stderr, "%s\n", strerror(errno));
+        return -1;
+    }
 
 	pid = fork();
 
-	// Ребёнок (Передатчик)
 	if (pid == 0) {
-		unsigned int fd = 0;
-		char c = 0;
-		sigemptyset(&set); // очищает набор сигналов
+		sigemptyset(&set); // очищаем набор сигналов
 
-		// SIGUSR1 - empty()
-		struct sigaction act_empty;                    
-		memset(&act_empty, 0, sizeof(act_empty));
-		act_empty.sa_handler = empty;
-		sigfillset(&act_empty.sa_mask);    
-		sigaction(SIGUSR1, &act_empty, NULL);
-		// SIGALRM - parentexit()
-		struct sigaction act_alarm;
-		memset(&act_alarm, 0, sizeof(act_alarm));
-		act_alarm.sa_handler = parentexit;
-		sigfillset(&act_alarm.sa_mask);
-		sigaction(SIGALRM, &act_alarm, NULL);
-
-		if ((fd = open(argv[1], O_RDONLY)) < 0 ){
-			perror("Can't open file");
-			exit(EXIT_FAILURE);
-		}
-
-		int i;
+		// SIGUSR1 - nothing()
+		struct sigaction nothing_action;                    
+		memset(&nothing_action, 0, sizeof(nothing_action));
+		nothing_action.sa_handler = nothing;
+		sigfillset(&nothing_action.sa_mask);    
+		sigaction(SIGUSR1, &nothing_action, NULL);
 		
+        // SIGALRM - parentexit()
+
+		struct sigaction alarm_action;
+		memset(&alarm_action, 0, sizeof(alarm_action));
+		alarm_action.sa_handler = parentexit;
+		sigfillset(&alarm_action.sa_mask);
+		sigaction(SIGALRM, &alarm_action, NULL);
+
+        int i;
+	    char c;	
 		while (read(fd, &c, 1) > 0){
 			// SIGALRM Будет получен если родитель не успеет ответить за секунду
 			alarm(1);
@@ -121,31 +135,48 @@ int main(int argc, char ** argv){
 			for ( i = 128; i >= 1; i /= 2){	
 				if ( i & c )  
 				 // 1 
-					kill(ppid, SIGUSR1);
+					kill(parent_pid, SIGUSR1);
 				else 
 				// 0 
-					kill(ppid, SIGUSR2);
+					kill(parent_pid, SIGUSR2);
 					// Ждём подтверждения от родителя
 					// приостанавливает процесс до получения сигнала
 					sigsuspend(&set); 
 			} 
 		}
-		// Файл кончился
 		exit(EXIT_SUCCESS);
 	}
 
-	errno = 0;
 	// Получаем пока ребёнок не умрёт
+    int out = open(argv[2], O_CREAT | O_WRONLY | O_EXCL, 0666);
+    if (out == -1){
+        fprintf(stderr, "Can't copy in file %s\n", argv[2]);
+        fprintf(stderr, "%s\n", strerror(errno));
+        return -1;
+    }
+
 	do {	
-		if(counter == 0){       // Whole byte
-			write(STDOUT_FILENO, &out_char, 1);  //        
-			fflush(stdout);
+		if(counter == 0){       // считали весь байт
+			write(out, &output_char, 1);  //        
 			counter=128;
-			out_char = 0;
+			output_char = 0;
 		}
 		sigsuspend(&set); // Ждём сигнал от ребёнка
 	} while (1);
+    return 0;
+}
 
-	exit(EXIT_SUCCESS);
+
+int main(int argc, char ** argv)
+{
+	if (argc != 3) {
+		usage();
+		exit(EXIT_FAILURE);
+	}
+    int cp = copy(argv);
+	if (cp == -1){
+        exit(EXIT_FAILURE);
+    }
+    exit(EXIT_SUCCESS);
 }
 
