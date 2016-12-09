@@ -62,11 +62,9 @@ void one_handler(int sign)
 
 int copy(char** argv)
 {
-	pid_t parent_pid = getpid(); // Запонимаем пид родителя
+	pid_t parent_pid = getpid(); 
     
 	sigset_t set;
-
-	// Изменяем набор блокированых сигналов
 
 	// при SIGCHLD - выходим
 	struct sigaction child_exit_action;
@@ -89,10 +87,7 @@ int copy(char** argv)
 	sigfillset(&zero_signal.sa_mask);    
 	sigaction(SIGUSR2, &zero_signal, NULL);
 								       
-
-	//sigemptyset(&set);
-
-	// Добавляем блокировки
+	//  блокировки
 	sigaddset(&set, SIGUSR1);
 	sigaddset(&set, SIGUSR2);
 	sigaddset(&set, SIGCHLD);
@@ -157,7 +152,7 @@ int copy(char** argv)
 
 	do {	
 		if(counter == 0){       // считали весь байт
-			write(out, &output_char, 1);  //        
+			write(out, &output_char, 1);          
 			counter=128;
 			output_char = 0;
 		}
