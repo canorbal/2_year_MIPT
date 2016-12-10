@@ -127,8 +127,8 @@ int check_args(int argc, char** argv, int* NC, int* ND, int* TD, int* NS, int* T
         usage();
         return -1;
     }
-
-    if (NC < 0 || ND < 0 || TD < 0 || NS < 0 || TS < 0 || L < 0) {
+    
+    if (*NC < 0 || *ND < 0 || *TD < 0 || *NS < 0 || *TS < 0 || *L < 0) {
 	    fprintf(stderr, "Negative number get as parameter\n");
         usage();
         return -1;
