@@ -36,7 +36,7 @@ void childexit(int sign)
 // SIGALRM
 void parentexit(int sign) 
 { 
-	exit(EXIT_SUCCESS);
+	exit(EXIT_FAILURE);
 }
 
 // Nothing
