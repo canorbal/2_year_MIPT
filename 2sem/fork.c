@@ -31,7 +31,8 @@ int main( int argc, char** argv)
     printf( "I'm parent: %d\n", getpid());
 
 
-    while( (pid = waitpid(0, &status, WNOHANG)) == 0) {
+    while( (pid = waitpid(0, &status, WNOHANG)) == 0)
+    {
         printf( "waiting...\n");
         sleep(1);
     }

@@ -62,8 +62,7 @@ void one_handler(int sign)
 
 int copy(char** argv)
 {
-	pid_t parent_pid = getpid(); 
-    
+	pid_t parent_pid = getpid();     
 	sigset_t set;
 
 	// при SIGCHLD - выходим
@@ -95,15 +94,16 @@ int copy(char** argv)
 	sigemptyset(&set);
 
     int fd = open(argv[1], O_RDONLY);
-    if (fd == -1){
+    if (fd == -1)
+    {
         fprintf(stderr, "Can't open file %s\n", argv[1]);
         fprintf(stderr, "%s\n", strerror(errno));
         return -1;
     }
 
 	pid = fork();
-
-	if (pid == 0) {
+    if (pid == 0) 
+    {
 		sigemptyset(&set); // очищаем набор сигналов
 
 		// SIGUSR1 - nothing()
@@ -123,11 +123,13 @@ int copy(char** argv)
 
         int i;
 	    char c;	
-		while (read(fd, &c, 1) > 0){
+		while (read(fd, &c, 1) > 0)
+        {
 			// SIGALRM Будет получен если родитель не успеет ответить за секунду
 			alarm(1);
 			// Побитовые операции		
-			for ( i = 128; i >= 1; i /= 2){	
+			for ( i = 128; i >= 1; i /= 2)
+            {	
 				if ( i & c )  
 				 // 1 
 					kill(parent_pid, SIGUSR1);
@@ -141,17 +143,19 @@ int copy(char** argv)
 		}
 		exit(EXIT_SUCCESS);
 	}
-
 	// Получаем пока ребёнок не умрёт
     int out = open(argv[2], O_CREAT | O_WRONLY | O_EXCL, 0666);
-    if (out == -1){
+    if (out == -1)
+    {
         fprintf(stderr, "Can't copy in file %s\n", argv[2]);
         fprintf(stderr, "%s\n", strerror(errno));
         return -1;
     }
 
-	do {	
-		if(counter == 0){       // считали весь байт
+	do 
+    {	
+		if(counter == 0)
+        {       // считали весь байт
 			write(out, &output_char, 1);          
 			counter=128;
 			output_char = 0;
@@ -164,12 +168,14 @@ int copy(char** argv)
 
 int main(int argc, char ** argv)
 {
-	if (argc != 3) {
+	if (argc != 3) 
+    {
 		usage();
 		exit(EXIT_FAILURE);
 	}
     int cp = copy(argv);
-	if (cp == -1){
+	if (cp == -1)
+    {
         exit(EXIT_FAILURE);
     }
     exit(EXIT_SUCCESS);

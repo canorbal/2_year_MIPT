@@ -25,9 +25,7 @@ int logic(char *file_name)
 
     if(f == -1)
     {
-        fprintf( stderr, "Can't open file %s: %s\n",
-            file_name,
-            strerror(errno));
+        fprintf( stderr, "Can't open file %s: %s\n", file_name, strerror(errno));
         ret = 1;
         goto out;
     }
@@ -44,21 +42,19 @@ int logic(char *file_name)
 
     if(write(f, buff, strlen(buff)) < 0)
     {
-        fprintf( stderr, "Can't write to file %s: %s\n",
-            file_name,
-            strerror(errno));
+        fprintf( stderr, "Can't write to file %s: %s\n", file_name, strerror(errno));
         ret = 1;
         goto out;
     }
 
-out:
-    if(f >= 0)
-        close(f);
+    out:
+        if(f >= 0)
+            close(f);
 
-    if(buff != 0)
-        free(buff);
+        if(buff != 0)
+            free(buff);
 
-    return ret;
+        return ret;
 }
 
 int main(int argc, char **argv)

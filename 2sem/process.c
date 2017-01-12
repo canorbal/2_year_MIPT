@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     printf("My getpid() = %d\n", getpid());
     printf("My int pid = %d\n", pid);
     printf("\n");
-    sleep()
+    sleep(10);
   }
 
   return 0;

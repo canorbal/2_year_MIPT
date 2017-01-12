@@ -16,11 +16,11 @@ void usage(char *prog_name)
 
 int open_input(char* input_name)
 {
-	int f = -1;
+    int f = -1;
 	f = open(input_name, O_RDONLY);
 	if (f == -1)
 	{
-    fprintf(stderr, "Can't open file %s\n", input_name);
+        fprintf(stderr, "Can't open file %s\n", input_name);
 		fprintf(stderr, "%s\n", strerror(errno));
 		return -1;
 	}
@@ -33,7 +33,7 @@ int open_output(char* output_name)
 	out = open(output_name, O_CREAT | O_WRONLY | O_EXCL, 0666);
 	if (out == -1)
 	{
-    fprintf(stderr, "Can't open file %s\n", output_name);
+        fprintf(stderr, "Can't open file %s\n", output_name);
 		fprintf(stderr, "%s\n", strerror(errno));
 		return -1;
 	}
@@ -42,61 +42,60 @@ int open_output(char* output_name)
 
 int copy(char* input_file, char* output_file)
 {
-  int ret = 1;
+    int ret = 1;
+    int input = -1;
+    int output = -1;
 
-  int input = -1;
-  int output = -1;
+    input = open_input(input_file);
+    if (input == -1)
+    {
+        ret = -1;
+        goto out;
+    }
 
-  input = open_input(input_file);
-  if (input == -1)
-  {
-    ret = -1;
-    goto out;
-  }
+    output = open_output(output_file);
+    if (output == -1)
+    {
+        ret = -1;
+        goto out;
+    }
 
-  output = open_output(output_file);
-  if (output == -1)
-  {
-    ret = -1;
-    goto out;
-  }
-
-  char buf[B_SIZE];
-  int bytes = 1;
+    char buf[B_SIZE];
+    int bytes = 1;
 
 	while (bytes>0)
 	{
-    bytes = read(input, buf, bytes);
-    if (bytes == -1)
-    {
-      fprintf(stderr, "Can't read file %s\n", input_file);
-      fprintf(stderr, "%s\n", strerror(errno));
-      ret = -1;
-      goto out;
-    }
-
-		int flag = -1;
-    buf[bytes] = 0;
+        bytes = read(input, buf, bytes);
+        if (bytes == -1)
+        {
+            fprintf(stderr, "Can't read file %s\n", input_file);
+            fprintf(stderr, "%s\n", strerror(errno));
+            ret = -1;
+            goto out;
+        }   
+	    int flag = -1;
+        buf[bytes] = 0;
 		flag = write(output, buf,	bytes);
 
 		if (flag == -1)
 		{
-      fprintf(stderr, "Can't write to file %s\n", output_file);
+            fprintf(stderr, "Can't write to file %s\n", output_file);
 			fprintf(stderr, "%s\n", strerror(errno));
-      ret = -1;
-      goto out;
+            ret = -1;
+            goto out;
 		}
 	}
-out:
-  if (input>=0)
-  {
-    close(input);
-  }
-  if (output>=0)
-  {
-    close(output);
-  }
-	return ret;
+
+    out:
+        if (input>=0)
+        {
+            close(input);
+        }
+        if (output>=0)
+        {
+            close(output);
+        }
+	    return ret;
 }
 
 
@@ -116,5 +115,4 @@ int main(int argc, char** argv)
 	}
 
 	return 0;
-
 }
