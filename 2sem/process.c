@@ -8,29 +8,28 @@
 
 int main(int argc, char** argv)
 {
-  int pid;
-  int status;
+    int pid;
+    int status;
 
-  pid = fork();
+    pid = fork();
 
-  if (pid == 0)
-  {
-    printf("\n");
-    printf("I'm a child\n");
-    printf("My getpid() = %d\n", getpid());
-    printf("My getppid = %d\n", getppid());
-    printf("My int pid = %d\n", pid);
-    printf("\n");
-  }
-  else
-  {
-    printf("\n");
-    printf("I'm a parent\n" );
-    printf("My getpid() = %d\n", getpid());
-    printf("My int pid = %d\n", pid);
-    printf("\n");
-    sleep(10);
-  }
-
-  return 0;
+    if (pid == 0)
+    {
+        printf("\n");
+        printf("I'm a child\n");
+        printf("My getpid() = %d\n", getpid());
+        printf("My getppid = %d\n", getppid());
+        printf("My int pid = %d\n", pid);
+        printf("\n");
+    }
+    else
+    {
+        printf("\n");
+        printf("I'm a parent\n" );
+        printf("My getpid() = %d\n", getpid());
+        printf("My int pid = %d\n", pid);
+        printf("\n");
+        sleep(10);
+    }
+    return 0;
 }

@@ -48,7 +48,7 @@ int main()
     sigaction(SIGUSR2, &sa, 0);
     signal(SIGHUP, print_cnt);
 
-    while(1) 
+    while(1)
     {
         printf( "suspending...\n");
         sigsuspend( &old_mask);
@@ -57,4 +57,3 @@ int main()
     }
     return 0;
 }
-

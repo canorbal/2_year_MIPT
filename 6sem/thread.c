@@ -27,7 +27,7 @@ void * my_thread( void * arg)
     double s = 0, x = t->from;
     int i;
 
-    for(i=0; i<t->n; i++) 
+    for(i=0; i<t->n; i++)
     {
         s += (function(x) + function(x+delta))/2 * delta;
         x += delta;
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     printf( "Integrating on interval from %f to %f\n", from, to);
     tasks = malloc(sizeof(struct Task)*numCPU);
 
-    for(i=0;i<numCPU;i++) 
+    for(i=0;i<numCPU;i++)
     {
         tasks[i].from = from + delta*i;
         tasks[i].to = tasks[i].from + delta;
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     }
 
     double integral = 0;
-    for(i=0;i<numCPU;i++) 
+    for(i=0;i<numCPU;i++)
     {
         pthread_join(tasks[i].t, &retval);
         integral += tasks[i].s;
