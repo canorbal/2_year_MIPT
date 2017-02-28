@@ -3,6 +3,8 @@
 #include "vector_functions.cpp"
 #include "matrix_class.cpp"
 #include "matrix_functions.cpp"
+#include "frac_class.cpp"
+#include "frac_functions.cpp"
 
 // объявление класса в .h файле
 // методы класса в .cpp файле
@@ -38,7 +40,17 @@ int main()
     std::cout << tmp_matr;
     std::cout << tmp_matr[1];
     std::cout << tmp_matr[0][0] << "\n";
+    
+    Frac a(-12, 8);
+    std::cout << a;
+    Frac b(24, 3);
+    std::cout << b;
+    std::cout << a+b;
+    std::cout << a-b;
+    std::cout << a * b;
+    std::cout << a / b;
     return 0;
+
 }
 
 
