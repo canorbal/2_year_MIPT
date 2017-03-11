@@ -1,20 +1,52 @@
-#include <stdio.h>
-#include "vector_class.cpp"
-#include "vector_functions.cpp"
+#include "vector.h"
 
-// объявление класса в .h файле
-// методы класса в .cpp файле
-// итого 3 файла: main.cpp, class.cpp, class.h, *other_functions.cpp
+Vector::Vector(double x_param, double y_param, double z_param)
+{
+    x = x_param;
+    y = y_param;
+    z = z_param;
+}
 
-int main()
-{   
-    Vector A(1,1,1);
-    A.set_x(10);
-    double x = A.get_x();
-    printf("%f\n", x);
-    Vector B(2,2,2);
-    printf("%f %f %f\n", (A+B).get_x(), (A+B).get_y(), (A+B).get_z());
-    return 0;
+double Vector::get_x()
+{
+    return x;
+}
+
+double Vector::get_y()
+{
+    return y;
+}
+
+double Vector::get_z()
+{
+    return z;
+}
+
+void Vector::set_x(double x_param)
+{
+    x = x_param;
+}
+void Vector::set_y(double y_param)
+{
+    y = y_param;
+}
+void Vector::set_z(double z_param)
+{
+    z = z_param;
 }
 
 
+Vector Vector::plus(Vector A)
+{
+    return Vector(x+A.get_x(), y+A.get_y(), z+A.get_z());   
+}
+
+Vector Vector::operator + (Vector A)
+{
+    return Vector(x+A.get_x(), y+A.get_y(), z+A.get_z());
+}
+
+Vector Vector::operator - (Vector A)
+{
+    return Vector(x-A.get_x(), y-A.get_y(), z-A.get_z());
+}

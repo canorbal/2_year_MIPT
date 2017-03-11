@@ -1,41 +1,82 @@
-#include <stdio.h>
 #include "vector.h"
-#include "vector_functions.cpp"
-#include "matrix.h"
-#include "matrix_functions.cpp"
-#include "frac.h"
-#include "frac_functions.cpp"
 
-// объявление класса в .h файле
-// методы класса в .cpp файле
-// итого 3 файла: main.cpp, class.cpp, class.h, *other_functions.cpp
-
-int main()
-{  
-    Frac x(1,2);
-    Frac y(3,4);
-    Frac z(1,4);
-
-    Vector A(x,y,z);
-
-    Vector B(2*x,2*y,2*z);
-    std::cout << A;
-
-    Frac* p[3];
-    
-    for (int i=0; i<3; i++)
-    {
-        p[i] = new Frac[3];
-        for(int j=0; j<3; j++)
-        {
-            p[i][j] = Frac(1,2);
-        }
-    }
-
-    Matrix matrix(p);
-    std::cout <<  (matrix) << "\n";
-    std::cout << (matrix)*A << "\n";
-    return 0;
+Vector::Vector(Frac x, Frac y, Frac z)
+{
+    this->x = x;
+    this->y =y;
+    this->z = z;
 }
 
+Frac Vector::get_x()
+{
+    return x;
+}
 
+Frac Vector::get_y()
+{
+    return y;
+}
+
+Frac Vector::get_z()
+{
+    return z;
+}
+
+void Vector::set_x(Frac x_param)
+{
+    x = x_param;
+}
+void Vector::set_y(Frac y_param)
+{
+    y = y_param;
+}
+void Vector::set_z(Frac z_param)
+{
+    z = z_param;
+}
+ 
+Vector Vector::plus(Vector A)
+{
+    return Vector(x+A.get_x(), y+A.get_y(), z+A.get_z());   
+}
+
+Vector operator - (Vector A, Vector B)
+{
+    return Vector(A.x-B.x, A.y-B.y, A.z-B.z);
+}
+
+Vector operator + (Vector X, Vector Y)
+{
+    return X.plus(Y);
+}
+
+Frac operator * (Vector A, Vector B)
+{
+    return A.x*B.x + A.y*B.y + A.z*B.z;
+}
+
+Vector operator * (Frac k, Vector A)
+{
+    return Vector(k*A.x, k*A.y, k*A.z);
+}
+
+Vector operator * (Vector A, Frac k)
+{
+    return k*A;
+}
+
+Frac Vector::operator[](int i)
+{
+    if (i==0)
+        return x;
+    if (i==1)
+        return y;
+    if (i==2)
+        return z;
+}
+
+std::ostream & operator << (std::ostream & os, Vector A)
+{
+    os << "( " << A.x << " " << A.y << " " << A.z << ")\n";
+    return os;
+}

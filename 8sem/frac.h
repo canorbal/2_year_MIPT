@@ -1,4 +1,6 @@
-#pragma once
+#ifndef FRAC_H_
+#define FRAC_H_
+
 #include <iostream>
 
 class Frac
@@ -14,3 +16,5 @@ class Frac
         friend Frac operator * (Frac a, Frac b);
         friend Frac operator / (Frac a, Frac b);
 };
+
+#endif 

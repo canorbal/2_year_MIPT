@@ -1,56 +1,82 @@
-#include <stdio.h>
-#include "vector_class.cpp"
-#include "vector_functions.cpp"
-#include "matrix_class.cpp"
-#include "matrix_functions.cpp"
-#include "frac_class.cpp"
-#include "frac_functions.cpp"
+#include "vector.h"
 
-// объявление класса в .h файле
-// методы класса в .cpp файле
-// итого 3 файла: main.cpp, class.cpp, class.h, *other_functions.cpp
-
-int main()
-{   
-    Vector A(1,1,1);
-    A.set_x(10);
-    Vector B(2,2,2);
-    std::cout << A;
-    std::cout << B;
-    std::cout << A+B;
-    std::cout << A-B;
-    std::cout << A*B << "\n";
-    std::cout << (1.5*A);
-
-    double* p[3];
-    
-    for (int i=0; i<3; i++)
-    {
-        p[i] = new double[3];
-        for(int j=0; j<3; j++)
-        {
-            p[i][j] = 1;
-        }
-    }
-
-    Matrix matr(p);
-    std::cout << (5*matr);
-    std::cout << (3*matr);
-    Matrix tmp_matr = (5*matr) * (3*matr); 
-    std::cout << tmp_matr;
-    std::cout << tmp_matr[1];
-    std::cout << tmp_matr[0][0] << "\n";
-    
-    Frac a(-12, 8);
-    std::cout << a;
-    Frac b(24, 3);
-    std::cout << b;
-    std::cout << a+b;
-    std::cout << a-b;
-    std::cout << a * b;
-    std::cout << a / b;
-    return 0;
-
+Vector::Vector(double x, double y, double z)
+{
+    this->x = x;
+    this->y =y;
+    this->z = z;
 }
 
+double Vector::get_x()
+{
+    return x;
+}
 
+double Vector::get_y()
+{
+    return y;
+}
+
+double Vector::get_z()
+{
+    return z;
+}
+
+void Vector::set_x(double x_param)
+{
+    x = x_param;
+}
+void Vector::set_y(double y_param)
+{
+    y = y_param;
+}
+void Vector::set_z(double z_param)
+{
+    z = z_param;
+}
+ 
+Vector Vector::plus(Vector A)
+{
+    return Vector(x+A.get_x(), y+A.get_y(), z+A.get_z());   
+}
+
+Vector operator - (Vector A, Vector B)
+{
+    return Vector(A.x-B.x, A.y-B.y, A.z-B.z);
+}
+
+Vector operator + (Vector X, Vector Y)
+{
+    return X.plus(Y);
+}
+
+double operator * (Vector A, Vector B)
+{
+    return A.x*B.x + A.y*B.y + A.z*B.z;
+}
+
+Vector operator * (double k, Vector A)
+{
+    return Vector(k*A.x, k*A.y, k*A.z);
+}
+
+Vector operator * (Vector A, double k)
+{
+    return k*A;
+}
+
+double Vector::operator[](int i)
+{
+    if (i==0)
+        return x;
+    if (i==1)
+        return y;
+    if (i==2)
+        return z;
+}
+
+std::ostream & operator << (std::ostream & os, Vector A)
+{
+    os << "( " << A.x << " " << A.y << " " << A.z << ")\n";
+    return os;
+}

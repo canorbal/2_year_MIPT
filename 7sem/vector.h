@@ -1,3 +1,6 @@
+#ifndef VECTOR_H_
+#define VECTOR_H_
+
 class Vector
 {
     double x,y,z; // по дефолту закрыты
@@ -21,4 +24,4 @@ class Vector
 
 };
 
-
+#endif

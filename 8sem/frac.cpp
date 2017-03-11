@@ -1,4 +1,4 @@
-#include "frac_class.cpp"
+#include "frac.h"
 
 Frac::Frac(int p, int q)
 {

@@ -1,4 +1,4 @@
-#include "matrix_class.cpp"
+#include "matrix.h"
 
 Matrix::Matrix()
 {
@@ -6,12 +6,12 @@ Matrix::Matrix()
     {
         for(int j=0; j<3; j++)
         {
-            matrix[i][j]=0;
+            matrix[i][j]=Frac(0);
         }
     }
 }
 
-Matrix::Matrix(double** p)
+Matrix::Matrix(Frac** p)
 {
     for (int i=0; i<3; i++)
     {
@@ -28,14 +28,14 @@ Matrix operator + (Matrix A, Matrix B)
     {
         for(int j=0; j<3; j++)
         {
-            A.matrix[i][j] += B.matrix[i][j];
+            A.matrix[i][j] = A.matrix[i][j] +  B.matrix[i][j];
     
         }
     }
     return A;
 }
 
-Matrix operator * (double k, Matrix A)
+Matrix operator * (Frac k, Matrix A)
 {
 
     for(int i=0; i<3; i++)
@@ -49,7 +49,7 @@ Matrix operator * (double k, Matrix A)
     return A;
 }
 
-Matrix operator * (Matrix A, double k)
+Matrix operator * (Matrix A, Frac k)
 {
     return k*A;
 }
@@ -64,7 +64,7 @@ Matrix operator * (Matrix A, Matrix B)
         {
             for (int ind = 0; ind < 3; ind++)
             {
-                C.matrix[i][j] += A.matrix[i][ind] * B.matrix[j][ind];
+                C.matrix[i][j] = C.matrix[i][j] +  A.matrix[i][ind] * B.matrix[j][ind];
             }
         }
     }
