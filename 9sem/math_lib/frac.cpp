@@ -2,7 +2,7 @@
 
 Frac::Frac()
 {
-    this->p=1;
+    this->p=0;
     this->q=1;
 }
 

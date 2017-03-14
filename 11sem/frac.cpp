@@ -78,12 +78,12 @@ Frac operator - (Frac a, Frac b)
     return c;
 }
 
+
 Frac operator * (Frac a, Frac b)
 {
     Frac new_frac(0,1);
     new_frac.p = a.p*b.p;
     new_frac.q = a.q*b.q;
-    new_frac.simplify();
     new_frac.simplify();
     return new_frac;
 }
