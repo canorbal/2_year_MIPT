@@ -24,12 +24,13 @@ void usage()
         "OFFICE is a model of clerks and scanners work in office.\n\n"
         "##############################################################\n"
         "\tDescription.\n"
-        "office NC ND TD NS TS L\n"
+        "./office NC ND TD NS TS L\n"
         "NC is number of clerks\n"
         "ND is number of documents\n"
         "TD is time for one document\n"
         "NS is number of scanners\n"
         "TS is time for one document to scan\n"
+        "L is the length of queue\n"
         "All time should be in seconds. All numbers should be positive\n"
         "#############################################################\n");
 }
@@ -107,14 +108,15 @@ int check_args(int argc, char** argv, int* NC, int* ND, int* TD, int* NS, int* T
         return -1;
     }
     *ND = strtol(argv[2], &endptr, 10);
+    
     if (strcmp(endptr, "\0") != 0)
     {
         fprintf(stderr, "Error in ND\n");
         usage();
         return -1;
     }
-
     *TD = strtol(argv[3], &endptr, 10);
+    
     if (strcmp(endptr, "\0") != 0)
     {
         fprintf(stderr, "Error in TD\n");
@@ -122,12 +124,14 @@ int check_args(int argc, char** argv, int* NC, int* ND, int* TD, int* NS, int* T
         return -1;
     }
     *NS = strtol(argv[4], &endptr, 10);
+    
     if (strcmp(endptr, "\0") != 0)
     {
         fprintf(stderr, "Error in NS\n");
         usage();
         return -1;
     }
+    
     *TS = strtol(argv[5], &endptr, 10);
     if (strcmp(endptr, "\0") != 0)
     {
@@ -136,6 +140,7 @@ int check_args(int argc, char** argv, int* NC, int* ND, int* TD, int* NS, int* T
         return -1;
     }
     *L = strtol(argv[6], &endptr, 10);
+    
     if (strcmp(endptr, "\0") != 0)
     {
         fprintf(stderr, "Error in L\n");

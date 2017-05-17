@@ -11,33 +11,34 @@
 void usage(char *prog_name)
 {
     fprintf(stderr, "Incorrect arguements: wrong number of arguements\n");
-    fprintf(stderr, "Usage: %s\n", prog_name);
+    fprintf(stderr, "Usage: \n");
+    fprintf(stderr, "./cp.o filename_from filename_to\n");
 }
 
 int open_input(char* input_name)
 {
     int f = -1;
-	f = open(input_name, O_RDONLY);
-	if (f == -1)
-	{
+    f = open(input_name, O_RDONLY);
+    if (f == -1)
+    {
         fprintf(stderr, "Can't open file %s\n", input_name);
-		fprintf(stderr, "%s\n", strerror(errno));
-		return -1;
-	}
-	return f;
+        fprintf(stderr, "%s\n", strerror(errno));
+        return -1;
+    }
+    return f;
 }
 
 int open_output(char* output_name)
 {
-	int out = -1;
-	out = open(output_name, O_CREAT | O_WRONLY | O_EXCL, 0666);
-	if (out == -1)
-	{
+    int out = -1;
+    out = open(output_name, O_CREAT | O_WRONLY | O_EXCL, 0666);
+    if (out == -1)
+    {
         fprintf(stderr, "Can't open file %s\n", output_name);
-		fprintf(stderr, "%s\n", strerror(errno));
-		return -1;
-	}
-	return out;
+        fprintf(stderr, "%s\n", strerror(errno));
+        return -1;
+    }
+    return out;
 }
 
 int copy(char* input_file, char* output_file)
@@ -63,8 +64,8 @@ int copy(char* input_file, char* output_file)
     char buf[B_SIZE];
     int bytes = 1;
 
-	while (bytes>0)
-	{
+    while (bytes>0)
+    {
         bytes = read(input, buf, bytes);
         if (bytes == -1)
         {
@@ -73,18 +74,18 @@ int copy(char* input_file, char* output_file)
             ret = -1;
             goto out;
         }   
-	    int flag = -1;
+        int flag = -1;
         buf[bytes] = 0;
-		flag = write(output, buf,	bytes);
+        flag = write(output, buf,	bytes);
 
-		if (flag == -1)
-		{
+        if (flag == -1)
+        {
             fprintf(stderr, "Can't write to file %s\n", output_file);
-			fprintf(stderr, "%s\n", strerror(errno));
+            fprintf(stderr, "%s\n", strerror(errno));
             ret = -1;
             goto out;
-		}
-	}
+        }
+    }
 
     out:
         if (input>=0)
@@ -95,24 +96,24 @@ int copy(char* input_file, char* output_file)
         {
             close(output);
         }
-	    return ret;
+        return ret;
 }
 
 
 int main(int argc, char** argv)
 {
-	if (argc!=3)
-	{
-		usage(argv[0]);
-		return -1;
-	}
+    if (argc!=3)
+    {
+        usage(argv[0]);
+        return -1;
+    }
 
-	int cp = copy(argv[1], argv[2]);
+    int cp = copy(argv[1], argv[2]);
 
-	if (cp == -1)
-	{
-		return -1;
-	}
+    if (cp == -1)
+    {
+        return -1;
+    }
 
-	return 0;
+    return 0;
 }

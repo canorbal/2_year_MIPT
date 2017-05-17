@@ -1,2 +1,0 @@
-компилировать
-gcc thread.c -o thread -lpthread

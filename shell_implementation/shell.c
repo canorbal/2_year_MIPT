@@ -227,7 +227,7 @@ struct program* parse(char* prog_line)
 int start_session()
 {
     printf("***********SHELL*************\n");
-    printf("**write down shell commands**\n");
+    printf("**write down shell commands**\n\n");
     char* line = NULL;
     size_t size = 0;
     int len;
@@ -240,7 +240,6 @@ int start_session()
     }
 
     line[len] = '\0';
-    printf("%s\n", line);
     char* sep = "|";
     struct program* array[MAX_PROG_NUM];
     char  str_array[MAX_PROG_NUM][MAX_ARGS_SIZE];

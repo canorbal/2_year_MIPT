@@ -1,0 +1,4 @@
+10 sleep 5
+6 echo Hello world
+2 ls -all
+1 sleep 10
